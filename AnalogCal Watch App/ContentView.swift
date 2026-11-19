@@ -1,8 +1,9 @@
 //  ContentView.swift
 //  Watch App only. The full-screen v5 face (Amethyst or Chalk), with the next
 //  event labelled on its arc. Turn the Digital Crown to move the label from
-//  event to event (it returns to "now" after a few seconds). Tap an arc for
-//  its details; long-press the dial to switch between the two looks.
+//  event to event (it returns to "now" after a few seconds). Tap an arc, or
+//  double tap your fingers, to open an event. Long-press the dial for
+//  settings (face and reminders).
 
 import EventKit
 import SwiftUI
@@ -18,6 +19,8 @@ struct ContentView: View {
     @State private var crownMoves = 0
     @StateObject private var health = HealthData()
     @AppStorage("faceTheme") private var themeID = FaceTheme.amethyst.id
+    @AppStorage("reminderMinutes") private var reminderMinutes = 10
+    @State private var showSettings = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isLuminanceReduced) private var dimmed
 
@@ -49,6 +52,12 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in
             Task { await load() }
         }
+        .onChange(of: reminderMinutes) { _, minutes in
+            Task { await Reminders.reschedule(minutes: minutes) }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(themeID: $themeID, reminderMinutes: $reminderMinutes)
+        }
     }
 
     private func load() async {
@@ -56,6 +65,7 @@ struct ContentView: View {
         events = CalendarStore.events()
         WidgetCenter.shared.reloadAllTimelines()   // keep the complication in step
         await health.refresh()
+        await Reminders.reschedule(minutes: reminderMinutes)
     }
 
     // MARK: Face
@@ -66,6 +76,7 @@ struct ContentView: View {
             let segments = RingSegment.make(from: events, day: now)
             let base = events.firstIndex { $0.end > now } ?? events.count
             let picked = base + Int(crown.rounded())
+            let highlighted = events.indices.contains(picked) ? events[picked] : nil
             let lower = -Double(base)
             let upper = Double(max(events.count - 1 - base, 0))
             GeometryReader { geo in
@@ -73,7 +84,7 @@ struct ContentView: View {
                     theme: dimmed ? theme.lowPower() : theme,
                     now: now,
                     segments: segments,
-                    next: events.indices.contains(picked) ? events[picked] : nil,
+                    next: highlighted,
                     calendars: calendarOrder,
                     data: FaceSnapshot(
                         heartRate: health.heartRate,
@@ -86,8 +97,19 @@ struct ContentView: View {
                     if let hit = hitTest(point, in: geo.size, segments: segments) { path.append(hit) }
                 }
                 .onLongPressGesture(minimumDuration: 0.6) {
-                    themeID = theme.next.id
                     WKInterfaceDevice.current().play(.click)
+                    showSettings = true
+                }
+                .overlay(alignment: .bottom) {
+                    // Double tap (index finger and thumb) opens the highlighted event.
+                    Button("Open event") {
+                        if let highlighted { path.append(highlighted) }
+                    }
+                    .handGestureShortcut(.primaryAction)
+                    .buttonStyle(.plain)
+                    .font(.system(size: 1))
+                    .frame(width: 2, height: 2)
+                    .opacity(0.01)
                 }
             }
             .focusable()
@@ -147,6 +169,34 @@ struct ContentView: View {
         return segments.last {
             $0.isPM == isPM && hour >= $0.startHour - 0.15 && hour <= $0.endHour + 0.15
         }?.event
+    }
+}
+
+// MARK: - Settings
+
+struct SettingsView: View {
+    @Binding var themeID: String
+    @Binding var reminderMinutes: Int
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Picker("Face", selection: $themeID) {
+                    Text("Amethyst").tag(FaceTheme.amethyst.id)
+                    Text("Chalk").tag(FaceTheme.chalk.id)
+                }
+                Picker("Reminders", selection: $reminderMinutes) {
+                    ForEach(Reminders.choices, id: \.self) { m in
+                        Text(m == 0 ? "Off" : "\(m) min before").tag(m)
+                    }
+                }
+                Text("Turn the Digital Crown to move between events. Double tap or tap an arc to open one.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+            }
+            .navigationTitle("Settings")
+        }
     }
 }
 

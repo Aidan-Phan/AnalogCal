@@ -11,21 +11,7 @@
     ],
   },
   "files": [
-    {
-      "kind": "folder",
-      "path": "AnalogCal Watch App",
-      "target-membership": [
-        "AnalogCal Watch App",
-      ],
-      "membership-exceptions": [
-        {
-          "target": "AnalogCal Watch App",
-          "exclusions": [
-            "AnalogCal Watch App.entitlements",
-          ],
-        },
-      ],
-    },
+    { "kind": "folder", "path": "AnalogCal Watch App", "target-membership": [ "AnalogCal Watch App" ] },
     {
       "kind": "folder",
       "path": "DayRing",
@@ -111,13 +97,13 @@
       "build-settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
         "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "CODE_SIGN_ENTITLEMENTS": "AnalogCal Watch App/AnalogCal Watch App.entitlements",
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "1",
         "DEVELOPMENT_TEAM": "7UZC7A4S2T",
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "AnalogCal",
-        "CODE_SIGN_ENTITLEMENTS": "AnalogCal Watch App/AnalogCal Watch App.entitlements",
         "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription": "Shows today's events on the dial.",
         "INFOPLIST_KEY_NSHealthShareUsageDescription": "Shows your latest heart rate on the dial.",
         "INFOPLIST_KEY_UISupportedInterfaceOrientations": "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown",

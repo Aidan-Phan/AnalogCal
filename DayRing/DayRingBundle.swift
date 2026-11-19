@@ -12,5 +12,6 @@ import SwiftUI
 struct DayRingBundle: WidgetBundle {
     var body: some Widget {
         DayRing()
+        UpNext()
     }
 }
