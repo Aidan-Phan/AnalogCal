@@ -11,13 +11,49 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "AnalogCal Watch App", "target-membership": [ "AnalogCal Watch App" ] },
     {
+      "kind": "folder",
+      "path": "AnalogCal Watch App",
+      "target-membership": [
+        "AnalogCal Watch App",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "AnalogCal Watch App",
+          "exclusions": [
+            "AnalogCal Watch App.entitlements",
+          ],
+        },
+      ],
+    },
+    {
+      "kind": "folder",
+      "path": "DayRing",
+      "target-membership": [
+        "DayRingExtension",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "DayRingExtension",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "group",
+      "name": "Frameworks",
+      "children": [
+        { "path": "<SDK>/System/Library/Frameworks/WidgetKit.framework", "target-membership": [ "DayRingExtension/frameworks" ] },
+        { "path": "<SDK>/System/Library/Frameworks/SwiftUI.framework", "target-membership": [ "DayRingExtension/frameworks" ] },
+      ],
+    }, {
       "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/AnalogCal.app", "id": "0F2B692730A68DEC00929FB2", "type": "wrapper.application", "index": false },
         { "path": "<PRODUCTS>/AnalogCal Watch App.app", "id": "0F2B692D30A68DEC00929FB2", "type": "wrapper.application", "index": false, "target-membership": [ { "build-phase": "AnalogCal/copy/Embed Watch Content", "header-preservation": "remove-on-copy" } ] },
+        { "path": "<PRODUCTS>/DayRingExtension.appex", "id": "0F2B694330A68E1B00929FB2", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "AnalogCal Watch App/copy/Embed Foundation Extensions", "header-preservation": "remove-on-copy" } ] },
       ],
     },
   ],
@@ -42,6 +78,7 @@
       "build-settings": {
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "1",
+        "DEVELOPMENT_TEAM": "7UZC7A4S2T",
         "INFOPLIST_KEY_CFBundleDisplayName": "AnalogCal",
         "IPHONEOS_DEPLOYMENT_TARGET": "27.2",
         "MARKETING_VERSION": "1.0",
@@ -58,19 +95,31 @@
       "id": "0F2B692C30A68DEC00929FB2",
       "product": "Products/AnalogCal Watch App.app",
       "product-type": "application",
+      "dependencies": [
+        "DayRingExtension",
+      ],
       "build-phases": [
         "compile-sources",
         "frameworks",
         "resources",
+        {
+          "kind": "copy",
+          "name": "Embed Foundation Extensions",
+          "bundle-base-path": "plugins-directory",
+        },
       ],
       "build-settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
         "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "1",
+        "DEVELOPMENT_TEAM": "7UZC7A4S2T",
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "AnalogCal",
+        "CODE_SIGN_ENTITLEMENTS": "AnalogCal Watch App/AnalogCal Watch App.entitlements",
+        "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription": "Shows today's events on the dial.",
+        "INFOPLIST_KEY_NSHealthShareUsageDescription": "Shows your heart rate and activity rings on the dial.",
         "INFOPLIST_KEY_UISupportedInterfaceOrientations": "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown",
         "INFOPLIST_KEY_WKWatchOnly": "YES",
         "LD_RUNPATH_SEARCH_PATHS": [
@@ -90,7 +139,48 @@
         "SWIFT_VERSION": "5.0",
         "TARGETED_DEVICE_FAMILY": "4",
         "VALIDATE_PRODUCT[config=Release]": "YES",
-        "WATCHOS_DEPLOYMENT_TARGET": "27.2",
+        "WATCHOS_DEPLOYMENT_TARGET": "26.6",
+      },
+    }, {
+      "name": "DayRingExtension",
+      "id": "0F2B694230A68E1B00929FB2",
+      "product": "Products/DayRingExtension.appex",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME": "WidgetBackground",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "1",
+        "DEVELOPMENT_TEAM": "7UZC7A4S2T",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "DayRing/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "DayRing",
+        "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription": "Shows today's events on the dial.",
+        "INFOPLIST_KEY_NSHumanReadableCopyright": "",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/Frameworks",
+          "@executable_path/../../Frameworks",
+          "@executable_path/../../../../Frameworks",
+        ],
+        "MARKETING_VERSION": "1.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "AnalogCal.AnalogCal.watchkitapp.DayRing",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SDKROOT": "watchos",
+        "SKIP_INSTALL": "YES",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "4",
+        "VALIDATE_PRODUCT[config=Release]": "YES",
+        "WATCHOS_DEPLOYMENT_TARGET": "26.6",
       },
     },
   ],
