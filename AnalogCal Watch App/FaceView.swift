@@ -244,8 +244,26 @@ struct FaceView: View {
         }
     }
 
+    /// The date window sits at 12 o'clock, and moves to 6 o'clock whenever
+    /// the hour or minute hand would cover it there (around 11:30 to 12:30,
+    /// and whenever the minute hand passes the top).
+    private var dateAtBottom: Bool {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: now)
+        let minute = Double(c.minute ?? 0)
+        let hourDeg = (Double((c.hour ?? 0) % 12) + minute / 60) * 30
+        let minuteDeg = minute * 6
+        func covering(_ spot: Double) -> Int {
+            [hourDeg, minuteDeg].filter { deg in
+                let d = abs((deg - spot).truncatingRemainder(dividingBy: 360))
+                return min(d, 360 - d) < 40
+            }.count
+        }
+        return covering(180) < covering(0)
+    }
+
     private func drawDate(_ ctx: GraphicsContext) {
-        let rect = CGRect(x: 156, y: 166, width: 84, height: 30)
+        let y: CGFloat = dateAtBottom ? 288 : 166
+        let rect = CGRect(x: 156, y: y, width: 84, height: 30)
         ctx.fill(Path(roundedRect: rect, cornerRadius: 11), with: .color(theme.dateBg))
         let label = now.formatted(.dateTime.weekday(.abbreviated).day()).uppercased()
         ctx.draw(Text(label).font(.system(size: 16, weight: .bold)).tracking(1.2).foregroundColor(theme.dateText),
