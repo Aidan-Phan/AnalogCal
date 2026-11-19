@@ -14,11 +14,15 @@ struct FaceView: View {
     let theme: FaceTheme
     let now: Date
     let segments: [RingSegment]
+    /// The event drawn with the labelled arc: the next event, or whichever
+    /// event the Digital Crown has moved the highlight to.
     let next: DayEvent?
     /// Calendar names in the order they first appear today; sets event colours.
     let calendars: [String]
     let data: FaceSnapshot
     var showSeconds = true
+    /// Always On (wrist down): skip the glow and the seconds hand.
+    var lowPower = false
 
     // Design-space constants (same numbers as the v5 artboards).
     static let width: CGFloat = 396
@@ -105,9 +109,9 @@ struct FaceView: View {
 
     private var nextSegment: RingSegment? {
         guard let next else { return nil }
-        return segments
-            .filter { $0.event.id == next.id && $0.segmentEnd > now }
-            .min { $0.segmentEnd < $1.segmentEnd }
+        let mine = segments.filter { $0.event.id == next.id }
+        return mine.filter { $0.segmentEnd > now }.min { $0.segmentEnd < $1.segmentEnd }
+            ?? mine.max { $0.segmentEnd < $1.segmentEnd }
     }
 
     // MARK: Dial
@@ -150,9 +154,11 @@ struct FaceView: View {
         }
 
         let (a, b) = trimmed(r, tabW, seg.startHour, seg.endHour)
-        var glow = ctx
-        glow.opacity = 0.18
-        glow.stroke(arc(r, from: a, to: b), with: .color(col), style: StrokeStyle(lineWidth: tabW + 10, lineCap: .round))
+        if !lowPower {
+            var glow = ctx
+            glow.opacity = 0.18
+            glow.stroke(arc(r, from: a, to: b), with: .color(col), style: StrokeStyle(lineWidth: tabW + 10, lineCap: .round))
+        }
         ctx.stroke(arc(r, from: a, to: b), with: .color(col), style: StrokeStyle(lineWidth: tabW, lineCap: .round))
 
         drawArcLabel(ctx, title: next.title.uppercased(), suffix: Self.countdown(to: next, now: now),
@@ -203,11 +209,15 @@ struct FaceView: View {
     }
 
     static func countdown(to event: DayEvent, now: Date) -> String {
-        if event.start <= now { return "NOW" }
-        let minutes = Int((event.start.timeIntervalSince(now) / 60).rounded(.up))
-        if minutes < 60 { return "\(minutes)M" }
-        let h = minutes / 60, m = minutes % 60
-        return m == 0 ? "\(h)H" : "\(h)H \(m)M"
+        func span(_ t: TimeInterval) -> String {
+            let minutes = max(1, Int((t / 60).rounded(.up)))
+            if minutes < 60 { return "\(minutes)M" }
+            let h = minutes / 60, m = minutes % 60
+            return m == 0 ? "\(h)H" : "\(h)H \(m)M"
+        }
+        if event.start > now { return span(event.start.timeIntervalSince(now)) }
+        if event.end > now { return "NOW" }
+        return span(now.timeIntervalSince(event.end)) + " AGO"
     }
 
     private func drawTicks(_ ctx: GraphicsContext) {

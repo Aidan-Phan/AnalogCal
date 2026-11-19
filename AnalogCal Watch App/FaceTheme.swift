@@ -16,21 +16,21 @@ extension Color {
 struct FaceTheme {
     enum NumeralMode { case all, quarters }
 
-    let id: String
-    let bg, dialIn, dialOut, track, track2, minTick, index, numeral: Color
-    let hand, lume, accent, dateBg, dateText, label, text, nowFill, nowStroke: Color
-    let heart, ring1, ring2, ring3, battery, free: Color
+    var id: String
+    var bg, dialIn, dialOut, track, track2, minTick, index, numeral: Color
+    var hand, lume, accent, dateBg, dateText, label, text, nowFill, nowStroke: Color
+    var heart, ring1, ring2, ring3, battery, free: Color
     /// Event colours, assigned to calendars in the order they appear.
-    let events: [Color]
+    var events: [Color]
     /// Text colour to use on top of each event colour (for the arc label).
-    let onEvents: [Color]
-    let indexWidth: CGFloat
-    let numeralMode: NumeralMode
-    let numeralFont: Font
-    let numeralRadius: CGFloat
-    let slimHands: Bool
-    let dullOpacity: Double
-    let pastOpacity: Double
+    var onEvents: [Color]
+    var indexWidth: CGFloat
+    var numeralMode: NumeralMode
+    var numeralFont: Font
+    var numeralRadius: CGFloat
+    var slimHands: Bool
+    var dullOpacity: Double
+    var pastOpacity: Double
 
     static let amethyst = FaceTheme(
         id: "amethyst",
@@ -78,6 +78,28 @@ struct FaceTheme {
 
     static func named(_ id: String) -> FaceTheme {
         all.first { $0.id == id } ?? amethyst
+    }
+
+    /// The low-power look used when the wrist is down (Always On): a pure
+    /// black screen, which costs almost nothing on the watch's OLED display,
+    /// with everything else drawn dim. Chalk's dark ink turns light grey so it
+    /// stays visible on black.
+    func lowPower() -> FaceTheme {
+        var t = self
+        let ink = id == "chalk" ? Color(rgb: 0xB9BEC6) : numeral
+        t.bg = .black; t.dialIn = .black; t.dialOut = .black
+        t.track = Color.white.opacity(0.07); t.track2 = Color.white.opacity(0.05)
+        t.minTick = .clear
+        t.index = ink.opacity(0.55); t.numeral = ink.opacity(0.55)
+        t.hand = ink.opacity(0.8); t.lume = lume.opacity(0.5)
+        t.accent = accent.opacity(0.5)
+        t.dateBg = .clear; t.dateText = ink.opacity(0.55)
+        t.label = Color.white.opacity(0.35); t.text = Color.white.opacity(0.6)
+        t.nowFill = ink.opacity(0.7); t.nowStroke = .black
+        t.heart = heart.opacity(0.5); t.battery = battery.opacity(0.5); t.free = free.opacity(0.5)
+        t.events = events.map { $0.opacity(0.5) }
+        t.onEvents = events.map { _ in Color.white.opacity(0.85) }
+        return t
     }
 
     var next: FaceTheme {

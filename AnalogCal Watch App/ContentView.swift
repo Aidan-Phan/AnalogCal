@@ -1,7 +1,8 @@
 //  ContentView.swift
 //  Watch App only. The full-screen v5 face (Amethyst or Chalk), with the next
-//  event labelled on its arc. Tap an arc for its details; long-press the
-//  dial to switch between the two looks.
+//  event labelled on its arc. Turn the Digital Crown to move the label from
+//  event to event (it returns to "now" after a few seconds). Tap an arc for
+//  its details; long-press the dial to switch between the two looks.
 
 import EventKit
 import SwiftUI
@@ -12,6 +13,9 @@ struct ContentView: View {
     @State private var events: [DayEvent] = []
     @State private var authorized = CalendarStore.hasAccess
     @State private var path: [DayEvent] = []
+    /// Digital Crown position: each whole step moves the highlight one event.
+    @State private var crown: Double = 0
+    @State private var crownMoves = 0
     @StateObject private var health = HealthData()
     @AppStorage("faceTheme") private var themeID = FaceTheme.amethyst.id
     @Environment(\.scenePhase) private var scenePhase
@@ -60,18 +64,23 @@ struct ContentView: View {
         TimelineView(.periodic(from: .now, by: dimmed ? 60 : 1)) { context in
             let now = context.date
             let segments = RingSegment.make(from: events, day: now)
+            let base = events.firstIndex { $0.end > now } ?? events.count
+            let picked = base + Int(crown.rounded())
+            let lower = -Double(base)
+            let upper = Double(max(events.count - 1 - base, 0))
             GeometryReader { geo in
                 FaceView(
-                    theme: theme,
+                    theme: dimmed ? theme.lowPower() : theme,
                     now: now,
                     segments: segments,
-                    next: events.first { $0.end > now },
+                    next: events.indices.contains(picked) ? events[picked] : nil,
                     calendars: calendarOrder,
                     data: FaceSnapshot(
                         heartRate: health.heartRate,
                         battery: health.battery,
                         freeToday: freeTime(after: now)),
-                    showSeconds: !dimmed)
+                    showSeconds: !dimmed,
+                    lowPower: dimmed)
                 .contentShape(Rectangle())
                 .onTapGesture { point in
                     if let hit = hitTest(point, in: geo.size, segments: segments) { path.append(hit) }
@@ -81,9 +90,26 @@ struct ContentView: View {
                     WKInterfaceDevice.current().play(.click)
                 }
             }
+            .focusable()
+            .digitalCrownRotation(
+                $crown, from: lower, through: upper > lower ? upper : lower + 1, by: 1,
+                sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
+            .onChange(of: crown) { _, _ in returnToNowSoon() }
         }
         .ignoresSafeArea()
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// After a few seconds without turning, the highlight goes back to the next event.
+    private func returnToNowSoon() {
+        crownMoves += 1
+        let move = crownMoves
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            if move == crownMoves, crown != 0 {
+                withAnimation { crown = 0 }
+            }
+        }
     }
 
     /// Calendars get theme colours in the order they first appear today.
