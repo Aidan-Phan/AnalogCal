@@ -174,12 +174,7 @@ def complication_face(now):
             f'<text x="66" y="274" font-family="{FONT}" font-size="28" font-weight="700" fill="#FFFFFF">Section</text>'
             f'<text x="66" y="302" font-family="{FONT}" font-size="18" fill="#8E8C99">10:00 – 11:30 · Center Hall</text>'
             f'{mini_ring(96, 400, 52, now)}'
-            f'<circle cx="198" cy="400" r="56" fill="#16131F"/><text x="198" y="392" font-family="{FONT}" font-size="15" font-weight="700" '
-            f'fill="#F29E5B" text-anchor="middle">BPM</text><text x="198" y="420" font-family="{FONT}" font-size="26" font-weight="700" '
-            f'fill="#FFFFFF" text-anchor="middle">72</text>'
-            f'<circle cx="300" cy="400" r="56" fill="#16131F"/><text x="300" y="392" font-family="{FONT}" font-size="15" font-weight="700" '
-            f'fill="#999FFF" text-anchor="middle">FREE</text><text x="300" y="420" font-family="{FONT}" font-size="24" font-weight="700" '
-            f'fill="#FFFFFF" text-anchor="middle">8h 25m</text>')
+            )
 
 
 def labels_tag(text, x, y, op):
@@ -309,7 +304,7 @@ def s_reminder(t, d):
 def s_complications(t, d):
     now = 9 + 50 / 60 + t / 3600
     return (bg() + place(complication_face(now)) +
-            caption("On any watch face", "Up Next and Day Ring complications\nkeep your schedule a glance away.") + fade(t, d))
+            caption("On your watch face", "Up Next fits rectangular slots,\nDay Ring fits circular ones.") + fade(t, d))
 
 
 def s_end(t, d):
