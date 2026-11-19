@@ -69,9 +69,6 @@ struct ContentView: View {
                     calendars: calendarOrder,
                     data: FaceSnapshot(
                         heartRate: health.heartRate,
-                        move: health.move, moveGoal: health.moveGoal,
-                        exercise: health.exercise, exerciseGoal: health.exerciseGoal,
-                        stand: health.stand, standGoal: health.standGoal,
                         battery: health.battery,
                         freeToday: freeTime(after: now)),
                     showSeconds: !dimmed)

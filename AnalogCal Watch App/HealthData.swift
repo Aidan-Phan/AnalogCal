@@ -1,6 +1,6 @@
 //  HealthData.swift
-//  Reads the latest heart rate and today's activity rings from Apple Health,
-//  plus the watch battery level, for the corners of the face.
+//  Reads the latest heart rate from Apple Health, plus the watch battery
+//  level, for the corners of the face.
 
 import Combine
 import HealthKit
@@ -9,12 +9,6 @@ import WatchKit
 
 final class HealthData: ObservableObject {
     @Published var heartRate: Int?
-    @Published var move: Double?
-    @Published var moveGoal: Double?
-    @Published var exercise: Double?
-    @Published var exerciseGoal: Double?
-    @Published var stand: Double?
-    @Published var standGoal: Double?
     @Published var battery: Float?
 
     private let store = HKHealthStore()
@@ -28,15 +22,12 @@ final class HealthData: ObservableObject {
 
         #if targetEnvironment(simulator)
         heartRate = 72
-        move = 420; moveGoal = 600
-        exercise = 14; exerciseGoal = 30
-        stand = 8; standGoal = 12
         if battery == nil { battery = 0.82 }
         #else
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let heartType = HKQuantityType(.heartRate)
         if !authorized {
-            let types: Set<HKObjectType> = [heartType, HKObjectType.activitySummaryType()]
+            let types: Set<HKObjectType> = [heartType]
             do {
                 try await store.requestAuthorization(toShare: [], read: types)
                 authorized = true
@@ -45,14 +36,6 @@ final class HealthData: ObservableObject {
             }
         }
         heartRate = await latestHeartRate(heartType)
-        if let summary = await todaySummary() {
-            move = summary.activeEnergyBurned.doubleValue(for: .kilocalorie())
-            moveGoal = summary.activeEnergyBurnedGoal.doubleValue(for: .kilocalorie())
-            exercise = summary.appleExerciseTime.doubleValue(for: .minute())
-            exerciseGoal = summary.appleExerciseTimeGoal.doubleValue(for: .minute())
-            stand = summary.appleStandHours.doubleValue(for: .count())
-            standGoal = summary.appleStandHoursGoal.doubleValue(for: .count())
-        }
         #endif
     }
 
@@ -63,18 +46,6 @@ final class HealthData: ObservableObject {
                 let unit = HKUnit.count().unitDivided(by: .minute())
                 let bpm = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: unit)
                 continuation.resume(returning: bpm.map { Int($0.rounded()) })
-            }
-            store.execute(query)
-        }
-    }
-
-    private func todaySummary() async -> HKActivitySummary? {
-        await withCheckedContinuation { continuation in
-            var day = Calendar.current.dateComponents([.era, .year, .month, .day], from: Date())
-            day.calendar = Calendar.current
-            let predicate = HKQuery.predicate(forActivitySummariesBetweenStart: day, end: day)
-            let query = HKActivitySummaryQuery(predicate: predicate) { @Sendable _, summaries, _ in
-                continuation.resume(returning: summaries?.first)
             }
             store.execute(query)
         }

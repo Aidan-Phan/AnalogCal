@@ -6,12 +6,6 @@ import SwiftUI
 
 struct FaceSnapshot {
     var heartRate: Int?
-    var move: Double?
-    var moveGoal: Double?
-    var exercise: Double?
-    var exerciseGoal: Double?
-    var stand: Double?
-    var standGoal: Double?
     var battery: Float?
     var freeToday: TimeInterval
 }
@@ -312,43 +306,18 @@ struct FaceView: View {
         Text(s).font(.system(size: 14, weight: .bold)).tracking(1).foregroundColor(theme.label)
     }
 
-    private func ring(_ ctx: GraphicsContext, r: CGFloat, fraction: Double?, color: Color) {
-        let c = CGPoint(x: 52, y: 46)
-        let track = Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
-        var t = ctx
-        t.opacity = 0.25
-        t.stroke(track, with: .color(color), lineWidth: 4.5)
-        let f = min(max(fraction ?? 0, 0), 1)
-        guard f > 0 else { return }
-        var p = Path()
-        p.addArc(center: c, radius: r, startAngle: .degrees(-90), endAngle: .degrees(-90 + 360 * f), clockwise: false)
-        ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
-    }
-
-    private func ratio(_ v: Double?, _ goal: Double?) -> Double? {
-        guard let v, let goal, goal > 0 else { return nil }
-        return v / goal
-    }
-
     private func drawCorners(_ ctx: GraphicsContext) {
-        // Top left: activity rings.
-        ring(ctx, r: 15, fraction: ratio(data.move, data.moveGoal), color: theme.ring1)
-        ring(ctx, r: 10, fraction: ratio(data.exercise, data.exerciseGoal), color: theme.ring2)
-        ring(ctx, r: 5, fraction: ratio(data.stand, data.standGoal), color: theme.ring3)
-        ctx.draw(value(data.move.map { "\(Int($0))" } ?? "--"), at: CGPoint(x: 74, y: 46), anchor: .leading)
-        ctx.draw(label("MOVE"), at: CGPoint(x: 36, y: 80), anchor: .leading)
-
-        // Top right: battery.
-        let body = CGRect(x: 330, y: 38, width: 28, height: 16)
+        // Top left: battery. The top-right corner is left for watchOS's own clock.
+        let body = CGRect(x: 36, y: 38, width: 28, height: 16)
         ctx.stroke(Path(roundedRect: body, cornerRadius: 4.5), with: .color(theme.label), lineWidth: 2)
-        ctx.fill(Path(roundedRect: CGRect(x: 359.5, y: 43, width: 3, height: 6), cornerRadius: 1), with: .color(theme.label))
+        ctx.fill(Path(roundedRect: CGRect(x: 65.5, y: 43, width: 3, height: 6), cornerRadius: 1), with: .color(theme.label))
         let level = CGFloat(max(0, min(1, data.battery ?? 0)))
         if level > 0 {
-            ctx.fill(Path(roundedRect: CGRect(x: 332.5, y: 40.5, width: 23 * level, height: 11), cornerRadius: 2.5),
+            ctx.fill(Path(roundedRect: CGRect(x: 38.5, y: 40.5, width: 23 * level, height: 11), cornerRadius: 2.5),
                      with: .color(theme.battery))
         }
-        ctx.draw(value(data.battery.map { "\(Int(($0 * 100).rounded()))%" } ?? "--"), at: CGPoint(x: 322, y: 46), anchor: .trailing)
-        ctx.draw(label("BATTERY"), at: CGPoint(x: 360, y: 80), anchor: .trailing)
+        ctx.draw(value(data.battery.map { "\(Int(($0 * 100).rounded()))%" } ?? "--"), at: CGPoint(x: 78, y: 46), anchor: .leading)
+        ctx.draw(label("BATTERY"), at: CGPoint(x: 36, y: 80), anchor: .leading)
 
         // Bottom left: heart rate.
         ctx.draw(label("BPM"), at: CGPoint(x: 36, y: 404), anchor: .leading)
